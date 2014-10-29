@@ -49,6 +49,13 @@ class LabeledPoint(object):
     def __repr__(self):
         return "LabeledPoint(" + ",".join((repr(self.label), repr(self.features))) + ")"
 
+    @classmethod
+    def parse_point(cls, row):
+        parts = row.split(',')
+        label = float(parts[0])
+        features= [float(feature.strip()) for feature in parts[1].split(' ')]
+        return cls(label, features)
+
 
 class LinearModel(object):
 
@@ -268,6 +275,31 @@ class RidgeRegressionWithSGD(object):
         def train(jrdd, i):
             return sc._jvm.PythonMLLibAPI().trainRidgeModelWithSGD(
                 jrdd, iterations, step, regParam, miniBatchFraction, i)
+
+        return _regression_train_wrapper(sc, train, RidgeRegressionModel, data, initialWeights)
+
+
+class StreamingLinearRegressionWithSGD(object):
+    step_size = 0.1
+    num_iterations = 50
+    mini_batch_fraction = 1.0
+
+    def __init__(self, step_size=None, num_iterations=None,
+                 mini_batch_fraction=None, initial_weights=None):
+        self.step_size = step_size or self.step_size
+        self.num_iterations = num_iterations or self.num_iterations
+        self.mini_batch_fraction = mini_batch_fraction or self.num_iterations
+        self.initial_weights = initial_weights
+
+    @classmethod
+    def trainOn(cls, data, stepSize=0.1, numIterations=50,
+                miniBatchFraction=1.0, initialWeights=None):
+        """Train a ridge regression model on the given data."""
+        sc = data.context
+
+        def train(jrdd, initial_weights):
+            return sc._jvm.PythonMLLibAPI().trainStreamingLinearRegressionWithSGD(
+                jrdd, stepSize, numiterations, miniBatchFraction, initial_weights)
 
         return _regression_train_wrapper(sc, train, RidgeRegressionModel, data, initialWeights)
 

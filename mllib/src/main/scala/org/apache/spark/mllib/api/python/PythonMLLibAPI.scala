@@ -45,6 +45,7 @@ import org.apache.spark.mllib.stat.{MultivariateStatisticalSummary, Statistics}
 import org.apache.spark.mllib.stat.correlation.CorrelationNames
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.Utils
 
@@ -136,6 +137,23 @@ class PythonMLLibAPI extends Serializable {
       lassoAlg,
       data,
       initialWeightsBA)
+  }
+
+  /**
+   * Java stub for Python mllib StreamingLinearRegressionWithSGD
+   */
+  def trainStreamingLinearRegressionWithSGD(
+      data: DStream[LabeledPoint],
+      stepSize: Double,
+      numIterations: Int,
+      miniBatchFraction: Int,
+      initialWeights: Vector): StreamingLinearRegressionWithSGD = {
+    val model = new StreamingLinearRegressionWithSGD()
+      .setStepSize(stepSize)
+      .setNumIterations(numIterations)
+      .setMiniBatchFraction(miniBatchFraction)
+      .setInitialWeights(initialWeights)
+    model
   }
 
   /**
