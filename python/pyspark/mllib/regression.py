@@ -144,6 +144,17 @@ def _regression_train_wrapper(sc, train_func, modelClass, data, initial_weights)
     return modelClass(weights, ans[1])
 
 
+def _regression_train_wrapper_streaming(sc, train_func, modelClass, data,
+                                        initial_weights):
+    initial_weights = initial_weights or [0.0] * len(data.first().features)
+    ser = PickleSerializer()
+    initial_bytes = bytearray(ser.dumps(_convert_to_vector(initial_weights)))
+    # use AutoBatchedSerializer before cache to reduce the memory
+    # overhead in JVM
+    cached = data._jdstream
+    ans = train_func(cached, initial_bytes)
+    return ans
+
 class LinearRegressionWithSGD(object):
 
     @classmethod
@@ -291,17 +302,19 @@ class StreamingLinearRegressionWithSGD(object):
         self.mini_batch_fraction = mini_batch_fraction or self.num_iterations
         self.initial_weights = initial_weights
 
+        
+
     @classmethod
     def trainOn(cls, data, stepSize=0.1, numIterations=50,
                 miniBatchFraction=1.0, initialWeights=None):
         """Train a ridge regression model on the given data."""
-        sc = data.context
+        sc = data.context()
 
         def train(jrdd, initial_weights):
             return sc._jvm.PythonMLLibAPI().trainStreamingLinearRegressionWithSGD(
-                jrdd, stepSize, numiterations, miniBatchFraction, initial_weights)
+                stepSize, numIterations, miniBatchFraction, initial_weights)
 
-        return _regression_train_wrapper(sc, train, RidgeRegressionModel, data, initialWeights)
+        return _regression_train_wrapper_streaming(sc, train, RidgeRegressionModel, data, initialWeights)
 
 
 def _test():

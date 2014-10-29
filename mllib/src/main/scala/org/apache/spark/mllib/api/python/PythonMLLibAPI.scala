@@ -143,11 +143,11 @@ class PythonMLLibAPI extends Serializable {
    * Java stub for Python mllib StreamingLinearRegressionWithSGD
    */
   def trainStreamingLinearRegressionWithSGD(
-      data: DStream[LabeledPoint],
       stepSize: Double,
       numIterations: Int,
-      miniBatchFraction: Int,
-      initialWeights: Vector): StreamingLinearRegressionWithSGD = {
+      miniBatchFraction: Double,
+      initialWeightsBA: Array[Byte]): StreamingLinearRegressionWithSGD = {
+    val initialWeights = SerDe.loads(initialWeightsBA).asInstanceOf[Vector]
     val model = new StreamingLinearRegressionWithSGD()
       .setStepSize(stepSize)
       .setNumIterations(numIterations)
