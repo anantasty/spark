@@ -28,6 +28,7 @@ import net.razorvine.pickle._
 
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.api.java.{JavaRDD, JavaSparkContext}
+import org.apache.spark.streaming.api.java.JavaDStream
 import org.apache.spark.api.python.{PythonRDD, SerDeUtil}
 import org.apache.spark.mllib.classification._
 import org.apache.spark.mllib.clustering._
@@ -142,7 +143,7 @@ class PythonMLLibAPI extends Serializable {
   /**
    * Java stub for Python mllib StreamingLinearRegressionWithSGD
    */
-  def trainStreamingLinearRegressionWithSGD(
+  def initStreamingLinearRegressionWithSGD(
       stepSize: Double,
       numIterations: Int,
       miniBatchFraction: Double,
@@ -154,6 +155,17 @@ class PythonMLLibAPI extends Serializable {
       .setMiniBatchFraction(miniBatchFraction)
       .setInitialWeights(initialWeights)
     model
+  }
+
+  def trainStreamingLinearRegressionWithSGD(
+    model: StreamingLinearRegressionWithSGD,
+    jrdd: JavaDStream[LabeledPoint]) = model.trainOn(jrdd.dstream)
+
+  def predictStreamingLinearRegressionWithSGD(
+    model: StreamingLinearRegressionWithSGD,
+    jrdd: JavaDStream[Vector]):DStream[Double] = {
+   val pred = model.predictOn(jrdd.dstream)
+   pred
   }
 
   /**
