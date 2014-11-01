@@ -19,6 +19,7 @@ import numpy as np
 from numpy import array
 
 from pyspark.mllib.common import callMLlibFunc, _to_java_object_rdd
+from pyspark.serializers import PickleSerializer
 from pyspark.mllib.linalg import SparseVector, _convert_to_vector
 
 __all__ = ['LabeledPoint', 'LinearModel', 'LinearRegressionModel', 'RidgeRegressionModel',
@@ -142,8 +143,6 @@ def _regression_train_wrapper_streaming(train_func, modelClass,
     initial_weights = initial_weights #or [0.0] * len(data.first().features)
     ser = PickleSerializer()
     initial_bytes = bytearray(ser.dumps(_convert_to_vector(initial_weights)))
-    # use AutoBatchedSerializer before cache to reduce the memory
-    # overhead in JVM
     return train_func(initial_bytes)
 
 
@@ -299,7 +298,7 @@ class StreamingLinearRegressionWithSGD(object):
 
     def predictOn(self, predict_dstream):
         ssc = predict_dstream.context()
-        ssc._jvm.PythonMLLibAPI().trainStreamingLinearRegressionWithSGD(
+        return ssc._jvm.PythonMLLibAPI().predictStreamingLinearRegressionWithSGD(
             self.model, predict_dstream._jdstream)
 
 
